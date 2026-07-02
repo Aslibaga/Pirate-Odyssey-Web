@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Pirate Odyssey</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- LOADING -->
+  <div class="screen" id="screen-loading">
+    <div class="loading-wrap">
+      <div class="loading-title">PIRATE ODYSSEY</div>
+      <div class="loading-bar"><div class="loading-bar-fill" id="loading-fill"></div></div>
+      <div class="loading-label" id="loading-label">Loading the seas...</div>
+    </div>
+  </div>
+
+  <!-- INTRO -->
+  <div class="screen hidden" id="screen-intro">
+    <div class="intro-overlay"></div>
+    <div class="intro-content">
+      <h1 class="game-title">PIRATE&nbsp;ODYSSEY</h1>
+      <p class="game-sub">An endless voyage across island, ocean &amp; sky</p>
+      <button class="btn btn-primary btn-big" id="btn-intro-start">TAP TO BEGIN</button>
+    </div>
+  </div>
+
+  <!-- MAIN MENU -->
+  <div class="screen hidden" id="screen-menu">
+    <div class="menu-bg" id="menu-bg"></div>
+    <div class="menu-topbar">
+      <button class="icon-btn" id="btn-menu-mute" title="Mute">🔊</button>
+    </div>
+    <div class="menu-layout">
+      <div class="side-card" id="card-pirate">
+        <div class="side-card-head">MY PIRATE</div>
+        <div class="side-card-body">
+          <img id="menu-char-img" class="side-card-img" src="" alt="">
+          <div class="side-card-name" id="menu-char-name">LUFFY</div>
+          <div class="side-card-power" id="menu-char-power">Gomu Gomu No Mi</div>
+        </div>
+        <button class="btn btn-outline" id="btn-goto-characters">CHOOSE PIRATE</button>
+      </div>
+
+      <div class="menu-center">
+        <h1 class="menu-logo">PIRATE ODYSSEY</h1>
+        <button class="btn btn-primary btn-wide" id="btn-play">START ADVENTURE</button>
+        <button class="btn btn-secondary btn-wide" id="btn-goto-settings">SETTINGS</button>
+        <div class="menu-best" id="menu-best">Best: 0</div>
+      </div>
+
+      <div class="side-card" id="card-horizon">
+        <div class="side-card-head">CURRENT HORIZON</div>
+        <div class="side-card-body">
+          <img id="menu-horizon-img" class="side-card-img wide" src="" alt="">
+          <div class="side-card-name" id="menu-horizon-name">ISLAND</div>
+        </div>
+        <button class="btn btn-outline" id="btn-goto-horizon">CHANGE HORIZON</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARACTER SELECT -->
+  <div class="screen hidden" id="screen-characters">
+    <div class="menu-bg" id="char-bg"></div>
+    <div class="panel-topbar">
+      <button class="btn btn-outline btn-small" id="btn-char-back">◀ BACK</button>
+      <h2 class="panel-title">CHOOSE YOUR PIRATE</h2>
+      <div class="spacer"></div>
+    </div>
+    <div class="char-scroll" id="char-scroll"></div>
+    <div class="panel-footer">
+      <button class="btn btn-primary btn-wide" id="btn-char-confirm">SELECT PIRATE</button>
+    </div>
+  </div>
+
+  <!-- HORIZON SELECT -->
+  <div class="screen hidden" id="screen-horizon">
+    <div class="menu-bg" id="horizon-bg"></div>
+    <div class="panel-topbar">
+      <button class="btn btn-outline btn-small" id="btn-horizon-back">◀ BACK</button>
+      <h2 class="panel-title">SELECT HORIZON</h2>
+      <div class="spacer"></div>
+    </div>
+    <div class="horizon-grid" id="horizon-grid"></div>
+    <div class="panel-footer">
+      <button class="btn btn-primary btn-wide" id="btn-horizon-confirm">SELECT HORIZON</button>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="screen hidden" id="screen-settings">
+    <div class="menu-bg" id="settings-bg"></div>
+    <div class="panel-topbar">
+      <button class="btn btn-outline btn-small" id="btn-settings-back">◀ BACK</button>
+      <h2 class="panel-title">SETTINGS</h2>
+      <div class="spacer"></div>
+    </div>
+    <div class="settings-box">
+      <label class="setting-row">
+        <span>MUSIC VOLUME</span>
+        <input type="range" id="slider-music" min="0" max="100" value="70">
+      </label>
+      <label class="setting-row">
+        <span>SFX VOLUME</span>
+        <input type="range" id="slider-sfx" min="0" max="100" value="80">
+      </label>
+      <div class="setting-row">
+        <span>HIGH SCORES</span>
+      </div>
+      <div class="highscore-list" id="highscore-list"></div>
+      <button class="btn btn-outline btn-wide" id="btn-reset-scores">RESET HIGH SCORES</button>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div class="screen hidden" id="screen-game">
+    <canvas id="game-canvas"></canvas>
+
+    <div class="hud" id="hud">
+      <button class="icon-btn hud-pause" id="btn-pause">☰</button>
+      <div class="hud-scores">
+        <div class="hud-score" id="hud-best">BEST 00000</div>
+        <div class="hud-score" id="hud-score">SCORE 00000</div>
+      </div>
+    </div>
+
+    <div class="touch-hint" id="touch-hint"></div>
+
+    <!-- Ocean lane buttons (mobile) -->
+    <div class="lane-controls hidden" id="lane-controls">
+      <button class="lane-btn" id="btn-lane-left">◀</button>
+      <button class="lane-btn" id="btn-lane-right">▶</button>
+    </div>
+
+    <!-- Ready overlay -->
+    <div class="overlay-panel hidden" id="overlay-ready">
+      <h2>READY, PIRATE?</h2>
+      <p id="ready-hint">Tap PLAY to set sail</p>
+      <div class="overlay-btn-row">
+        <button class="btn btn-primary" id="btn-ready-play">PLAY</button>
+        <button class="btn btn-outline" id="btn-ready-home">HOME</button>
+      </div>
+    </div>
+
+    <!-- Pause overlay -->
+    <div class="overlay-panel hidden" id="overlay-pause">
+      <h2>PAUSED</h2>
+      <div class="overlay-btn-col">
+        <button class="btn btn-primary" id="btn-pause-resume">RESUME</button>
+        <button class="btn btn-secondary" id="btn-pause-restart">RESTART</button>
+        <button class="btn btn-outline" id="btn-pause-home">HOME</button>
+      </div>
+    </div>
+
+    <!-- Game over overlay -->
+    <div class="overlay-panel hidden" id="overlay-gameover">
+      <h2 class="gameover-title">GAME OVER</h2>
+      <p id="gameover-score">YOUR SCORE: 0</p>
+      <p class="gameover-sub">Do you want to clear another voyage?</p>
+      <div class="overlay-btn-row">
+        <button class="btn btn-primary" id="btn-gameover-play">PLAY AGAIN</button>
+        <button class="btn btn-outline" id="btn-gameover-home">HOME</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/game.js"></script>
+</body>
+</html>
