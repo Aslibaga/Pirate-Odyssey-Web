@@ -25,6 +25,10 @@ const HORIZONS = [
 const A = 'assets/';
 const CHAR_DIR = id => `${A}characters/character_${id}/`;
 
+function normalizeMode(mode) {
+  return String(mode || '').toUpperCase();
+}
+
 /* =========================================================
    STATE
    ========================================================= */
@@ -40,7 +44,11 @@ const state = {
 function loadState() {
   try {
     const raw = localStorage.getItem('pirateOdysseyState');
-    if (raw) Object.assign(state, JSON.parse(raw));
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.horizon) parsed.horizon = normalizeMode(parsed.horizon);
+      Object.assign(state, parsed);
+    }
   } catch (e) {}
 }
 function saveState() {
@@ -107,8 +115,35 @@ async function loadAudioBuffer(key, path) {
   } catch (e) { /* ignore missing/failed audio */ }
 }
 
+function buildEssentialAssetList() {
+  const list = [];
+  // Always preload the UI backgrounds and the selected character's key assets.
+  list.push(['bg_gamestart', `${A}backgrounds/gamestart.png`]);
+  list.push(['bg_island', `${A}backgrounds/island.png`]);
+  list.push(['bg_ocean', `${A}backgrounds/ocean.png`]);
+  list.push(['bg_sky', `${A}backgrounds/sky.png`]);
+  const c = state.character;
+  const dir = CHAR_DIR(c);
+  list.push([`${c.id}_standing`, dir + c.standing]);
+  list.push([`${c.id}_ship`, dir + `ship/${c.id}_ship.png`]);
+  list.push([`${c.id}_balloon`, dir + `balloon/${c.id}_balloon.png`]);
+  for (let i = 0; i < 3; i++) {
+    list.push([`${c.id}_run_${i}`, dir + `running/${c.id}_running(${i}).png`]);
+  }
+  return list;
+}
+
 async function preloadAll(onProgress) {
   const imgList = buildAssetList();
+  let done = 0;
+  const total = imgList.length;
+  await Promise.all(imgList.map(([key, src]) =>
+    loadImage(key, src).then(() => { done++; onProgress(done / total); })
+  ));
+}
+
+async function preloadEssential(onProgress) {
+  const imgList = buildEssentialAssetList();
   let done = 0;
   const total = imgList.length;
   await Promise.all(imgList.map(([key, src]) =>
@@ -353,16 +388,18 @@ class Engine {
   }
 
   setupForMode(mode) {
-    this.mode = mode;
+    this.mode = normalizeMode(mode);
     this.reset();
     const W = this.W, H = this.H;
+    const isSky = this.mode === 'SKY';
+    const isOcean = this.mode === 'OCEAN';
     this.charX = W * 0.14;
-    this.groundY = H * 0.74;
-    this.charY = (mode === 'SKY') ? H * 0.4 : this.groundY;
-    this.speedStart = W * (mode === 'SKY' ? 0.30 : 0.32);
-    this.speedMax = W * (mode === 'SKY' ? 0.55 : 0.72);
+    this.groundY = H * 0.835;
+    this.charY = isSky ? H * 0.4 : this.groundY;
+    this.speedStart = W * (isSky ? 0.30 : 0.32);
+    this.speedMax = W * (isSky ? 0.60 : 0.78);
     this.speed = this.speedStart;
-    if (mode === 'OCEAN') {
+    if (isOcean) {
       this.computeLanes();
       this.shipY = this.laneY[1];
     }
@@ -455,8 +492,9 @@ class Engine {
     if (!this.started || this.gameOver || this.paused) return;
     this.elapsed += dt;
     const W = this.W, H = this.H;
-    const progress = Math.min(1, this.elapsed / 120);
-    this.speed = this.speedStart + (this.speedMax - this.speedStart) * progress;
+    const progress = Math.min(1, this.elapsed / 70);
+    const ramp = Math.pow(progress, 0.72);
+    this.speed = this.speedStart + (this.speedMax - this.speedStart) * ramp;
 
     // spawn timing
     let spawnMin, spawnMax;
@@ -508,7 +546,7 @@ class Engine {
         }
       }
       this.frameTimer += dt;
-      if (!this.jumping && this.frameTimer > 0.09) {
+      if (!this.jumping && this.frameTimer > 0.03) {
         this.frameTimer = 0;
         this.runFrame = (this.runFrame + 1) % 5;
       }
@@ -631,7 +669,7 @@ class Engine {
   drawCharacterSprite(kind, x, y, w, h) {
     const c = state.character;
     let img = null;
-    if (this.gameOver) {
+    if (this.gameOver && this.mode === 'ISLAND') {
       img = images[`${c}_gameover`] || images[`${c}_standing`];
     } else if (kind === 'ship') img = images[`${c}_ship`];
     else if (kind === 'balloon') img = images[`${c}_balloon`];
@@ -646,7 +684,8 @@ class Engine {
   drawIsland() {
     for (const o of this.obstacles) this.drawObstacleShape(o);
     const h = this.H * 0.34;
-    this.drawCharacterSprite(this.jumping ? 'jump' : 'run', this.charX, this.charY - h, null, h);
+    const drawY = this.charY - h;
+    this.drawCharacterSprite(this.jumping ? 'jump' : 'run', this.charX, drawY, null, h);
   }
 
   drawSky() {
@@ -772,7 +811,7 @@ function togglePause() {
 
 function enterGame() {
   showScreen('game');
-  setTimeout(() => engine.resize(), 30);
+  engine.resize();
   engine.setupForMode(state.horizon);
   updateHud();
   document.getElementById('ready-hint').textContent =
@@ -785,6 +824,7 @@ function enterGame() {
 
 document.getElementById('btn-intro-start').addEventListener('click', async () => {
   await Audio_.unlock();
+  await lockLandscape();
   Audio_.playMusic('bg1');
   showScreen('menu');
   refreshMenuScreen();
@@ -795,7 +835,7 @@ document.getElementById('btn-menu-mute').addEventListener('click', (e) => {
   e.target.textContent = state.muted ? '🔇' : '🔊';
 });
 
-document.getElementById('btn-play').addEventListener('click', () => { Audio_.playSfx('click'); enterGame(); });
+document.getElementById('btn-play').addEventListener('click', () => { Audio_.playSfx('click'); lockLandscape(); enterGame(); });
 document.getElementById('btn-goto-characters').addEventListener('click', () => {
   Audio_.playSfx('click'); buildCharacterScreen(); showScreen('characters');
 });
@@ -834,15 +874,39 @@ document.getElementById('btn-gameover-home').addEventListener('click', () => { A
 /* =========================================================
    BOOT
    ========================================================= */
+function updateOrientationPrompt() {
+  const isPortrait = window.innerHeight > window.innerWidth;
+  document.getElementById('orientation-prompt').classList.toggle('hidden', !isPortrait);
+}
+
 async function boot() {
   loadState();
   showScreen('loading');
   const fill = document.getElementById('loading-fill');
   const label = document.getElementById('loading-label');
-  await preloadAll((p) => {
+  await preloadEssential((p) => {
     fill.style.width = Math.round(p * 100) + '%';
     label.textContent = 'Loading the seas... ' + Math.round(p * 100) + '%';
   });
   showScreen('intro');
+  updateOrientationPrompt();
+  window.addEventListener('resize', updateOrientationPrompt);
+  window.addEventListener('orientationchange', updateOrientationPrompt);
+  preloadAll(() => {});
 }
+
+async function lockLandscape() {
+  if (!screen.orientation || !screen.orientation.lock) return;
+  try {
+    await screen.orientation.lock('landscape');
+  } catch (e) {
+    // some browsers do not allow lock without fullscreen or user gesture
+  }
+}
+
+function startLandscapeMode() {
+  updateOrientationPrompt();
+  lockLandscape();
+}
+
 boot();
