@@ -191,22 +191,33 @@ html, body {
   background: var(--panel);
   border: 3px solid var(--accent);
   border-radius: 22px;
-  width: 210px;
-  padding: 16px 12px;
+  width: 260px;
+  height: 360px;
+  padding: 18px 14px;
   text-align: center;
   backdrop-filter: blur(2px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 .side-card:first-child { order: 1; }
 .side-card:last-child { order: 3; }
 .side-card-head {
   background: #002a55; border: 2px solid var(--accent); border-radius: 10px;
-  font-size: 12px; letter-spacing: 1px; padding: 6px; margin-bottom: 10px;
+  font-size: 13px; letter-spacing: 1px; padding: 8px; margin-bottom: 12px; font-weight: 600;
+}
+.side-card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: center;
+  gap: 10px;
 }
 .side-card-img { width: 100%; max-height: 150px; object-fit: contain; display: block; margin: 0 auto; }
-.side-card-img.wide { max-height: 110px; }
-.side-card-name { font-weight: 500; margin-top: 8px; font-size: 15px; }
-.side-card-power { color: var(--accent); font-size: 11px; margin-bottom: 12px; }
-.side-card .btn { margin-top: 10px; width: 100%; font-size: 12px; padding: 10px 8px; letter-spacing: 1px; }
+.side-card-img.wide { max-height: 150px; }
+.side-card-name { font-weight: 600; font-size: 18px; }
+.side-card-power { color: var(--accent); font-size: 12px; }
+.side-card .btn { width: 100%; font-size: 14px; padding: 12px 10px; letter-spacing: 1px; margin-top: 0; }
 
 @media (max-width: 760px) {
   .menu-layout { flex-direction: column; justify-content: flex-start; padding-top: 8vh; gap: 2vh; overflow-y: auto; height: 100%; }
@@ -314,13 +325,18 @@ html, body {
 #game-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 
 .hud {
-  position: absolute; top: 0; left: 0; right: 0; z-index: 6;
+  position: absolute; top: 0; left: 0; right: 0; z-index: 10;
   display: flex; align-items: flex-start; justify-content: space-between;
   padding: max(10px, env(safe-area-inset-top)) 14px 0 14px;
   pointer-events: none;
 }
 .hud > * { pointer-events: auto; }
 .hud-pause { background: rgba(0,0,0,0.5); }
+.hud-pause.hidden { 
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
 .hud-scores { text-align: right; display: flex; flex-direction: column; gap: 2px; }
 .hud-score {
   font-weight: 800; font-size: clamp(12px, 2.6vw, 20px);

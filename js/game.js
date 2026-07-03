@@ -425,6 +425,7 @@ class Engine {
     setOverlay('ready', false);
     setOverlay('gameover', false);
     setOverlay('pause', false);
+    document.getElementById('btn-pause').classList.remove('hidden');
     document.getElementById('lane-controls').classList.toggle('hidden', this.mode !== 'OCEAN');
     const hint = document.getElementById('touch-hint');
     if (this.mode === 'OCEAN') hint.textContent = 'Swipe or tap ◀ ▶ to change lanes';
@@ -741,6 +742,10 @@ function pad(n) { return String(n).padStart(5, '0'); }
 
 function setOverlay(name, show) {
   document.getElementById('overlay-' + name).classList.toggle('hidden', !show);
+  // Hide pause button (menu) when any overlay is shown
+  if (name === 'ready' || name === 'gameover' || name === 'pause') {
+    document.getElementById('btn-pause').classList.toggle('hidden', show);
+  }
 }
 
 /* =========================================================
@@ -814,11 +819,16 @@ function enterGame() {
   engine.resize();
   engine.setupForMode(state.horizon);
   updateHud();
-  document.getElementById('ready-hint').textContent =
-    state.horizon === 'OCEAN' ? 'A/D or ◀▶ to switch lanes' : 'Tap or press Space to move';
+  const hints = {
+    'ISLAND': 'Tap or press Space to jump',
+    'OCEAN': 'A/D or ◀▶ to switch lanes',
+    'SKY': 'Tap or press Space to flap'
+  };
+  document.getElementById('ready-hint').textContent = hints[state.horizon] || 'Tap or press Space to move';
   setOverlay('ready', true);
   setOverlay('pause', false);
   setOverlay('gameover', false);
+  document.getElementById('btn-pause').classList.add('hidden');
   Audio_.playMusic('bg2');
 }
 
